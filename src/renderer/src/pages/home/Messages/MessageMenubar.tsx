@@ -321,7 +321,7 @@ const MessageMenubar: FC<Props> = (props) => {
   const onRegenerate = async (e: React.MouseEvent | undefined) => {
     e?.stopPropagation?.()
     if (loading) return
-    const selectedModel = isGrouped ? model : assistantModel
+    const selectedModel = model || assistantModel
     const _message = resetAssistantMessage(message, selectedModel)
     editMessage(message.id, { ..._message })
     resendMessage(_message, assistant)
