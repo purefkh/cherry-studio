@@ -34,6 +34,7 @@ import { debounce, isEmpty } from 'lodash'
 import {
   AtSign,
   CirclePause,
+  EyeOff,
   FileSearch,
   FileText,
   Globe,
@@ -970,6 +971,11 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
               <Tooltip placement="top" title={t('chat.input.new_topic', { Command: newTopicShortcut })} arrow>
                 <ToolbarButton type="text" onClick={addNewTopic}>
                   <MessageSquareDiff size={19} />
+                </ToolbarButton>
+              </Tooltip>
+              <Tooltip placement="top" title={t('chat.input.new_temporary_topic')} arrow>
+                <ToolbarButton type="text" onClick={addNewTemporaryTopic}>
+                  <EyeOff size={19} />
                 </ToolbarButton>
               </Tooltip>
               <AttachmentButton
