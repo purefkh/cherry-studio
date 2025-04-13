@@ -235,6 +235,7 @@
       "topics.list": "Topic List",
       "topics.move_to": "Move to",
       "topics.new": "New Topic",
+      "topics.new_temporary": "Temporary Topic",
       "topics.pinned": "Pinned Topics",
       "topics.prompt": "Topic Prompts",
       "topics.prompt.edit.title": "Edit Topic Prompts",

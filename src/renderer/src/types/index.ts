@@ -114,6 +114,7 @@ export type Topic = {
   pinned?: boolean
   prompt?: string
   isNameManuallyEdited?: boolean
+  isTemporary?: boolean
 }
 
 export type User = {
