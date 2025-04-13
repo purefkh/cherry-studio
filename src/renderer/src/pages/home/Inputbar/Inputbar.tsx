@@ -23,7 +23,7 @@ import { useAppDispatch } from '@renderer/store'
 import { sendMessage as _sendMessage } from '@renderer/store/messages'
 import { setSearching } from '@renderer/store/runtime'
 import { Assistant, FileType, KnowledgeBase, KnowledgeItem, Message, Model, Topic } from '@renderer/types'
-import { classNames, delay, formatFileSize, getFileExtension } from '@renderer/utils'
+import { classNames, delay, formatFileSize, getFileExtension, uuid } from '@renderer/utils'
 import { getFilesFromDropEvent } from '@renderer/utils/input'
 import { documentExts, imageExts, textExts } from '@shared/config/constant'
 import { Button, Tooltip } from 'antd'
@@ -107,6 +107,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   const [isTranslating, setIsTranslating] = useState(false)
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<KnowledgeBase[]>([])
   const [mentionModels, setMentionModels] = useState<Model[]>([])
+  const [enabledMCPs, setEnabledMCPs] = useState<any[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [textareaHeight, setTextareaHeight] = useState<number>()
   const startDragY = useRef<number>(0)
@@ -196,9 +197,10 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
       }
 
       if (!isEmpty(assistant.mcpServers) && !isEmpty(activedMcpServers)) {
-        userMessage.enabledMCPs = activedMcpServers.filter((server) =>
-          assistant.mcpServers?.some((s) => s.id === server.id)
-        )
+        userMessage.enabledMCPs =
+          enabledMCPs.length > 0
+            ? enabledMCPs
+            : activedMcpServers.filter((server) => assistant.mcpServers?.some((s) => s.id === server.id))
       }
 
       userMessage.usage = await estimateMessageUsage(userMessage)
@@ -507,6 +509,47 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
     setTimeout(() => EventEmitter.emit(EVENT_NAMES.SHOW_TOPIC_SIDEBAR), 0)
   }, [addTopic, assistant, setActiveTopic, setModel])
 
+  const addNewTemporaryTopic = useCallback(async () => {
+    await modelGenerating()
+
+    const tempTopicId = `_temp-${uuid()}`
+    const temporaryTopic: Topic = {
+      id: tempTopicId,
+      assistantId: assistant.id,
+      name: tempTopicId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [],
+      isTemporary: true,
+      prompt: assistant.prompt
+    }
+
+    // Set as active topic, update messages.currentTopic
+    setActiveTopic(temporaryTopic)
+
+    setText('')
+    setFiles([])
+    setSelectedKnowledgeBases([])
+    setMentionModels([])
+    setEnabledMCPs && setEnabledMCPs(assistant.mcpServers || [])
+    setTimeout(() => resizeTextArea(), 0)
+    setExpend(false)
+
+    textareaRef.current?.focus()
+
+    setTimeout(() => EventEmitter.emit(EVENT_NAMES.SHOW_TOPIC_SIDEBAR), 0)
+  }, [
+    assistant,
+    setActiveTopic,
+    resizeTextArea,
+    setText,
+    setFiles,
+    setSelectedKnowledgeBases,
+    setMentionModels,
+    setEnabledMCPs,
+    setExpend
+  ])
+
   const onPause = async () => {
     await pauseMessages()
   }
@@ -704,6 +747,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
         setContextCount({ current: contextCount.current, max: contextCount.max }) // 现在contextCount是一个对象而不是单个数值
       }),
       EventEmitter.on(EVENT_NAMES.ADD_NEW_TOPIC, addNewTopic),
+      EventEmitter.on(EVENT_NAMES.ADD_NEW_TEMPORARY_TOPIC, addNewTemporaryTopic),
       EventEmitter.on(EVENT_NAMES.QUOTE_TEXT, (quotedText: string) => {
         setText((prevText) => {
           const newText = prevText ? `${prevText}\n${quotedText}\n` : `${quotedText}\n`
@@ -714,7 +758,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
       })
     ]
     return () => unsubscribes.forEach((unsub) => unsub())
-  }, [addNewTopic, resizeTextArea])
+  }, [addNewTopic, addNewTemporaryTopic, resizeTextArea])
 
   useEffect(() => {
     textareaRef.current?.focus()

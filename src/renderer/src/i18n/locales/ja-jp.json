@@ -235,6 +235,7 @@
       "topics.list": "トピックリスト",
       "topics.move_to": "移動先",
       "topics.new": "新しいトピック",
+      "topics.new_temporary": "一時的なトピック",
       "topics.pinned": "トピックを固定",
       "topics.prompt": "トピック提示語",
       "topics.prompt.edit.title": "トピック提示語を編集する",

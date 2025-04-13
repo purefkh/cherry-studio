@@ -380,10 +380,13 @@ const Topics: FC<Props> = ({ assistant: _assistant, activeTopic, setActiveTopic 
     targetTopic
   ])
 
+  // Filter out temporary topics before rendering the list
+  const visibleTopics = useMemo(() => assistant.topics.filter((topic) => !topic.isTemporary), [assistant.topics])
+
   return (
     <Dropdown menu={{ items: getTopicMenuItems }} trigger={['contextMenu']}>
       <Container right={topicPosition === 'right'} className="topics-tab">
-        <DragableList list={assistant.topics} onUpdate={updateTopics}>
+        <DragableList list={visibleTopics} onUpdate={updateTopics}>
           {(topic) => {
             const isActive = topic.id === activeTopic?.id
             const topicName = topic.name.replace('`', '')
