@@ -1,9 +1,10 @@
-import { EyeInvisibleOutlined, FormOutlined } from '@ant-design/icons'
+import { FormOutlined } from '@ant-design/icons'
 import { useTheme } from '@renderer/context/ThemeProvider'
 import { EventEmitter } from '@renderer/services/EventService'
 import { EVENT_NAMES } from '@renderer/services/EventService'
 import { ThemeMode } from '@renderer/types'
 import { Button as AntdButton } from 'antd'
+import { EyeOff } from 'lucide-react'
 import { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -25,13 +26,7 @@ const NewTopicButton: FC = () => {
       <Button size="small" color="primary" icon={<FormOutlined />} onClick={addNewTopic} $theme={theme}>
         {t('chat.topics.new')}
       </Button>
-      <Button
-        size="small"
-        color="primary"
-        icon={<EyeInvisibleOutlined />}
-        onClick={addTemporaryTopic}
-        $theme={theme}
-        style={{ marginLeft: '8px' }}>
+      <Button size="small" color="primary" icon={<EyeOff />} onClick={addTemporaryTopic} $theme={theme}>
         {t('chat.topics.new_temporary')}
       </Button>
     </Container>
