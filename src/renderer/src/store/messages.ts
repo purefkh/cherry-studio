@@ -343,7 +343,8 @@ export const sendMessage =
         const state = getState()
         const currentTopicMessages = state.messages.messagesByTopic[topic.id]
 
-        if (currentTopicMessages) {
+        // Only sync to DB if the topic is not temporary
+        if (currentTopicMessages && !topic.isTemporary) {
           await syncMessagesWithDB(topic.id, currentTopicMessages)
         }
 
