@@ -975,7 +975,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
               </Tooltip>
               <Tooltip placement="top" title={t('chat.input.new_temporary_topic')} arrow>
                 <ToolbarButton type="text" onClick={addNewTemporaryTopic}>
-                  <EyeOff size={19} />
+                  <EyeOff size={18} color={topic.isTemporary ? 'var(--color-primary)' : 'var(--color-icon)'} />
                 </ToolbarButton>
               </Tooltip>
               <AttachmentButton
