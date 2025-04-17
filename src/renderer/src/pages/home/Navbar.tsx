@@ -64,9 +64,9 @@ const HeaderNavbar: FC<Props> = ({ activeAssistant }) => {
               <PanelLeftClose size={18} />
             </NavbarIcon>
           </Tooltip>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
             <Tooltip title={t('settings.shortcuts.new_topic')} mouseEnterDelay={0.8}>
-              <NavbarIcon onClick={() => EventEmitter.emit(EVENT_NAMES.ADD_NEW_TOPIC)} style={{ marginRight: 5 }}>
+              <NavbarIcon onClick={() => EventEmitter.emit(EVENT_NAMES.ADD_NEW_TOPIC)}>
                 <MessageSquareDiff size={18} />
               </NavbarIcon>
             </Tooltip>
