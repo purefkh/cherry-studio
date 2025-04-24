@@ -32,12 +32,12 @@ jobs:
   check-repository:
     runs-on: ubuntu-latest
     outputs:
-      should_run: ${{ github.repository == 'CherryHQ/cherry-studio' }}
+      should_run: ${{ github.repository == 'purefkh/cherry-studio' }}
     steps:
       - name: Check if running in main repository
         run: |
           echo "Running in repository: ${{ github.repository }}"
-          echo "Should run: ${{ github.repository == 'CherryHQ/cherry-studio' }}"
+          echo "Should run: ${{ github.repository == 'purefkh/cherry-studio' }}"
 
   nightly-build:
     needs: check-repository
@@ -53,7 +53,7 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: dev
 
       - name: Install Node.js
         uses: actions/setup-node@v4
