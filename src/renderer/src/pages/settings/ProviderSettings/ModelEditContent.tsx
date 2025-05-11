@@ -10,7 +10,7 @@ import {
 import { Model, ModelTypes } from '@renderer/types'
 import { getDefaultGroupName } from '@renderer/utils'
 import { Button, Checkbox, Divider, Flex, Form, Input, message, Modal } from 'antd'
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 interface ModelEditContentProps {
@@ -24,14 +24,44 @@ const ModelEditContent: FC<ModelEditContentProps> = ({ model, onUpdateModel, ope
   const [form] = Form.useForm()
   const { t } = useTranslation()
   const [showModelTypes, setShowModelTypes] = useState(false)
-  const onFinish = (values: any) => {
-    const updatedModel = {
-      ...model,
-      id: values.id || model.id,
-      name: values.name || model.name,
-      group: values.group || model.group
+  const [editingModel, setEditingModel] = useState<Model | null>(null)
+
+  useEffect(() => {
+    if (open && model) {
+      const initialTypes = model.type ? { ...model.type } : {}
+      setEditingModel({ ...model, type: initialTypes })
+      form.setFieldsValue({
+        id: model.id,
+        name: model.name,
+        group: model.group
+      })
+    } else if (!open) {
+      setEditingModel(null)
+      setShowModelTypes(false)
     }
-    onUpdateModel(updatedModel)
+  }, [open, model, form])
+
+  const handleModelTypeChange = (typeKey: keyof ModelTypes, isChecked: boolean) => {
+    setEditingModel((prev) => {
+      if (!prev) return null
+      const newTypes = {
+        ...(prev.type || {}),
+        [typeKey]: isChecked
+      }
+      return { ...prev, type: newTypes }
+    })
+  }
+
+  const onFinish = (values: any) => {
+    if (!editingModel) return
+
+    const finalModel = {
+      ...editingModel,
+      id: values.id || editingModel.id,
+      name: values.name || editingModel.name,
+      group: values.group || editingModel.group
+    }
+    onUpdateModel(finalModel)
     setShowModelTypes(false)
     onClose()
   }
@@ -61,11 +91,6 @@ const ModelEditContent: FC<ModelEditContentProps> = ({ model, onUpdateModel, ope
         labelAlign="left"
         colon={false}
         style={{ marginTop: 15 }}
-        initialValues={{
-          id: model.id,
-          name: model.name,
-          group: model.group
-        }}
         onFinish={onFinish}>
         <Form.Item
           name="id"
@@ -139,11 +164,12 @@ const ModelEditContent: FC<ModelEditContentProps> = ({ model, onUpdateModel, ope
                 return (
                   <TypeCheckboxItem
                     key={typeKey}
-                    model={model}
+                    originalModelForChecker={model}
+                    currentTypeState={editingModel?.type?.[typeKey]}
                     typeKey={typeKey}
                     label={label}
                     checker={checker}
-                    onUpdateModel={onUpdateModel}
+                    onTypeChange={handleModelTypeChange}
                   />
                 )
               })}
@@ -156,28 +182,28 @@ const ModelEditContent: FC<ModelEditContentProps> = ({ model, onUpdateModel, ope
 }
 
 interface TypeCheckboxItemProps {
-  model: Model
+  originalModelForChecker: Model
+  currentTypeState: boolean | undefined
   typeKey: keyof ModelTypes
   label: string
   checker: (model: Model) => boolean
-  onUpdateModel: (model: Model) => void
+  onTypeChange: (typeKey: keyof ModelTypes, isChecked: boolean) => void
 }
 
-const TypeCheckboxItem: FC<TypeCheckboxItemProps> = ({ model, typeKey, label, checker, onUpdateModel }) => {
+const TypeCheckboxItem: FC<TypeCheckboxItemProps> = ({
+  originalModelForChecker,
+  currentTypeState,
+  typeKey,
+  label,
+  checker,
+  onTypeChange
+}) => {
   const { t } = useTranslation()
-  const typeValue = model.type?.[typeKey]
-  const initialChecked = typeof typeValue === 'boolean' ? typeValue : checker(model)
 
-  const handleChange = (checked: any) => {
-    const isPotentiallyRiskyChange = checked && !checker(model)
+  const isChecked = typeof currentTypeState === 'boolean' ? currentTypeState : checker(originalModelForChecker)
 
-    const performUpdate = () => {
-      const newType = {
-        ...(model.type || {}),
-        [typeKey]: checked
-      }
-      onUpdateModel({ ...model, type: newType })
-    }
+  const handleChange = (newCheckedState: boolean) => {
+    const isPotentiallyRiskyChange = newCheckedState && !checker(originalModelForChecker)
 
     if (isPotentiallyRiskyChange) {
       window.modal.confirm({
@@ -188,18 +214,18 @@ const TypeCheckboxItem: FC<TypeCheckboxItemProps> = ({ model, typeKey, label, ch
         okButtonProps: { danger: true },
         cancelButtonProps: { type: 'primary' },
         onOk: () => {
-          performUpdate()
+          onTypeChange(typeKey, newCheckedState)
         },
         onCancel: () => {},
         centered: true
       })
     } else {
-      performUpdate()
+      onTypeChange(typeKey, newCheckedState)
     }
   }
 
   return (
-    <Checkbox checked={initialChecked} onChange={(e) => handleChange(e.target.checked)}>
+    <Checkbox checked={isChecked} onChange={(e) => handleChange(e.target.checked)}>
       {label}
     </Checkbox>
   )
