@@ -10,7 +10,7 @@ import {
 import { Model, ModelTypes } from '@renderer/types'
 import { getDefaultGroupName } from '@renderer/utils'
 import { Button, Checkbox, Divider, Flex, Form, Input, message, Modal } from 'antd'
-import { FC, useMemo, useState } from 'react'
+import { FC, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 interface ModelEditContentProps {
@@ -164,13 +164,8 @@ interface TypeCheckboxItemProps {
 }
 
 const TypeCheckboxItem: FC<TypeCheckboxItemProps> = ({ model, typeKey, label, checker, onUpdateModel }) => {
-  const initialChecked = useMemo(() => {
-    const typeValue = model.type?.[typeKey]
-    if (typeof typeValue === 'boolean') {
-      return typeValue
-    }
-    return checker(model)
-  }, [model, typeKey, checker])
+  const typeValue = model.type?.[typeKey]
+  const initialChecked = typeof typeValue === 'boolean' ? typeValue : checker(model)
 
   return (
     <Checkbox
@@ -178,7 +173,7 @@ const TypeCheckboxItem: FC<TypeCheckboxItemProps> = ({ model, typeKey, label, ch
       onChange={(e) => {
         const checked = e.target.checked
         const newType = {
-          ...model.type,
+          ...(model.type || {}),
           [typeKey]: checked
         }
         onUpdateModel({ ...model, type: newType })
