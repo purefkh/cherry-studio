@@ -164,20 +164,42 @@ interface TypeCheckboxItemProps {
 }
 
 const TypeCheckboxItem: FC<TypeCheckboxItemProps> = ({ model, typeKey, label, checker, onUpdateModel }) => {
+  const { t } = useTranslation()
   const typeValue = model.type?.[typeKey]
   const initialChecked = typeof typeValue === 'boolean' ? typeValue : checker(model)
 
+  const handleChange = (checked: any) => {
+    const isPotentiallyRiskyChange = checked && !checker(model)
+
+    const performUpdate = () => {
+      const newType = {
+        ...(model.type || {}),
+        [typeKey]: checked
+      }
+      onUpdateModel({ ...model, type: newType })
+    }
+
+    if (isPotentiallyRiskyChange) {
+      window.modal.confirm({
+        title: t('settings.moresetting.warn'),
+        content: t('settings.moresetting.check.warn'),
+        okText: t('settings.moresetting.check.confirm'),
+        cancelText: t('common.cancel'),
+        okButtonProps: { danger: true },
+        cancelButtonProps: { type: 'primary' },
+        onOk: () => {
+          performUpdate()
+        },
+        onCancel: () => {},
+        centered: true
+      })
+    } else {
+      performUpdate()
+    }
+  }
+
   return (
-    <Checkbox
-      checked={initialChecked}
-      onChange={(e) => {
-        const checked = e.target.checked
-        const newType = {
-          ...(model.type || {}),
-          [typeKey]: checked
-        }
-        onUpdateModel({ ...model, type: newType })
-      }}>
+    <Checkbox checked={initialChecked} onChange={(e) => handleChange(e.target.checked)}>
       {label}
     </Checkbox>
   )
