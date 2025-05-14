@@ -363,7 +363,7 @@ export default class GeminiProvider extends BaseProvider {
     })
 
     if (this.useSystemPromptForTools) {
-      systemInstruction = buildSystemPrompt(assistant.prompt || '', mcpTools)
+      systemInstruction = await buildSystemPrompt(assistant.prompt || '', mcpTools)
     }
 
     const toolResponses: MCPToolResponse[] = []
