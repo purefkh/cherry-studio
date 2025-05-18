@@ -805,13 +805,14 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
     if (assistant.webSearchProviderId && !WebSearchService.isWebSearchEnabled(assistant.webSearchProviderId)) {
       updateAssistant({ ...assistant, webSearchProviderId: undefined })
     }
-    if (!isGenerateImageModel(model) && assistant.enableGenerateImage) {
+    const supportGenerateImage = isGenerateImageModel(model) || mentionModels.some(isGenerateImageModel)
+    if (!supportGenerateImage && assistant.enableGenerateImage) {
       updateAssistant({ ...assistant, enableGenerateImage: false })
     }
-    if (isGenerateImageModel(model) && !assistant.enableGenerateImage && model.id !== 'gemini-2.0-flash-exp') {
+    if (supportGenerateImage && !assistant.enableGenerateImage && model.id !== 'gemini-2.0-flash-exp') {
       updateAssistant({ ...assistant, enableGenerateImage: true })
     }
-  }, [assistant, model, updateAssistant])
+  }, [assistant, model, mentionModels, updateAssistant])
 
   const onMentionModel = useCallback((model: Model) => {
     setMentionModels((prev) => {
@@ -867,7 +868,10 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   }
 
   const isExpended = expended || !!textareaHeight
-  const showThinkingButton = isSupportedThinkingTokenModel(model) || isSupportedReasoningEffortModel(model)
+  const showThinkingButton =
+    isSupportedThinkingTokenModel(model) ||
+    isSupportedReasoningEffortModel(model) ||
+    mentionModels.some((m) => isSupportedThinkingTokenModel(m) || isSupportedReasoningEffortModel(m))
 
   return (
     <Container
@@ -967,6 +971,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
 
               <GenerateImageButton
                 model={model}
+                mentionModels={mentionModels}
                 assistant={assistant}
                 onEnableGenerateImage={onEnableGenerateImage}
                 ToolbarButton={ToolbarButton}
