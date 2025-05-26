@@ -725,13 +725,16 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
     if (assistant.webSearchProviderId && !WebSearchService.isWebSearchEnabled(assistant.webSearchProviderId)) {
       updateAssistant({ ...assistant, webSearchProviderId: undefined })
     }
-    if (!isGenerateImageModel(model) && assistant.enableGenerateImage) {
+    const supportGenerateImage = isGenerateImageModel(model) || mentionModels.some(isGenerateImageModel)
+    const supportDisableGenerateImage =
+      isSupportedDisableGenerationModel(model) || mentionModels.some(isSupportedDisableGenerationModel)
+    if (!supportGenerateImage && assistant.enableGenerateImage) {
       updateAssistant({ ...assistant, enableGenerateImage: false })
     }
-    if (isGenerateImageModel(model) && !assistant.enableGenerateImage && !isSupportedDisableGenerationModel(model)) {
+    if (supportGenerateImage && !assistant.enableGenerateImage && !supportDisableGenerateImage) {
       updateAssistant({ ...assistant, enableGenerateImage: true })
     }
-  }, [assistant, model, updateAssistant])
+  }, [assistant, model, mentionModels, updateAssistant])
 
   const onMentionModel = useCallback((model: Model) => {
     setMentionModels((prev) => {
@@ -765,7 +768,11 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
   }
 
   const isExpended = expended || !!textareaHeight
-  const showThinkingButton = isSupportedThinkingTokenModel(model) || isSupportedReasoningEffortModel(model)
+  const showThinkingButton =
+    isSupportedThinkingTokenModel(model) ||
+    isSupportedReasoningEffortModel(model) ||
+    mentionModels.some((m) => isSupportedThinkingTokenModel(m) || isSupportedReasoningEffortModel(m))
+  const showGenerateImageButton = isGenerateImageModel(model) || mentionModels.some(isGenerateImageModel)
 
   if (isMultiSelectMode) {
     return null
@@ -835,6 +842,7 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
               files={files}
               setFiles={setFiles}
               showThinkingButton={showThinkingButton}
+              showGenerateImageButton={showGenerateImageButton}
               showKnowledgeIcon={showKnowledgeIcon}
               selectedKnowledgeBases={selectedKnowledgeBases}
               handleKnowledgeBaseSelect={handleKnowledgeBaseSelect}
