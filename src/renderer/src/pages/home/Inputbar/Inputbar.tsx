@@ -709,9 +709,6 @@ const Inputbar: FC<Props> = ({ assistant: _assistant, setActiveTopic, topic }) =
     if (!supportGenerateImage && assistant.enableGenerateImage) {
       updateAssistant({ ...assistant, enableGenerateImage: false })
     }
-    if (supportGenerateImage && !assistant.enableGenerateImage && model.id !== 'gemini-2.0-flash-exp') {
-      updateAssistant({ ...assistant, enableGenerateImage: true })
-    }
   }, [assistant, model, mentionModels, updateAssistant])
 
   const onMentionModel = useCallback((model: Model) => {
