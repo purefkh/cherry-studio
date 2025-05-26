@@ -1,5 +1,6 @@
 import { GenericChunk } from '@renderer/aiCore/middleware/schemas'
 import {
+  isGenerateImageModel,
   isOpenAIChatCompletionOnlyModel,
   isSupportedReasoningEffortOpenAIModel,
   isVisionModel
@@ -306,21 +307,23 @@ export class OpenAIResponseAPIClient extends OpenAIBaseClient<
           }
         }
         // FIXME: 最好还是直接使用previous_response_id来处理（或者在数据库中存储image_generation_call的id）
-        if (enableGenerateImage) {
-          const finalAssistantMessage = userMessage.findLast(
-            (m) => (m as OpenAI.Responses.EasyInputMessage).role === 'assistant'
-          ) as OpenAI.Responses.EasyInputMessage
-          const finalUserMessage = userMessage.pop() as OpenAI.Responses.EasyInputMessage
-          if (
-            finalAssistantMessage &&
-            Array.isArray(finalAssistantMessage.content) &&
-            finalUserMessage &&
-            Array.isArray(finalUserMessage.content)
-          ) {
-            finalAssistantMessage.content = [...finalAssistantMessage.content, ...finalUserMessage.content]
+        if (isGenerateImageModel(model)) {
+          if (enableGenerateImage) {
+            const finalAssistantMessage = userMessage.findLast(
+              (m) => (m as OpenAI.Responses.EasyInputMessage).role === 'assistant'
+            ) as OpenAI.Responses.EasyInputMessage
+            const finalUserMessage = userMessage.pop() as OpenAI.Responses.EasyInputMessage
+            if (
+              finalAssistantMessage &&
+              Array.isArray(finalAssistantMessage.content) &&
+              finalUserMessage &&
+              Array.isArray(finalUserMessage.content)
+            ) {
+              finalAssistantMessage.content = [...finalAssistantMessage.content, ...finalUserMessage.content]
+            }
+            // 这里是故意将上条助手消息的内容（包含图片和文件）作为用户消息发送
+            userMessage = [{ ...finalAssistantMessage, role: 'user' } as OpenAI.Responses.EasyInputMessage]
           }
-          // 这里是故意将上条助手消息的内容（包含图片和文件）作为用户消息发送
-          userMessage = [{ ...finalAssistantMessage, role: 'user' } as OpenAI.Responses.EasyInputMessage]
         }
 
         // 4. 最终请求消息
@@ -338,10 +341,12 @@ export class OpenAIResponseAPIClient extends OpenAIBaseClient<
         }
 
         if (enableGenerateImage) {
-          tools.push({
-            type: 'image_generation',
-            partial_images: streamOutput ? 2 : undefined
-          })
+          if (isGenerateImageModel(model)) {
+            tools.push({
+              type: 'image_generation',
+              partial_images: streamOutput ? 2 : undefined
+            })
+          }
         }
 
         const toolChoices: OpenAI.Responses.ToolChoiceTypes = {

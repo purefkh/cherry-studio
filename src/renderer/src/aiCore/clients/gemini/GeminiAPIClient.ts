@@ -24,6 +24,7 @@ import {
   GEMINI_FLASH_MODEL_REGEX,
   isGeminiReasoningModel,
   isGemmaModel,
+  isGenerateImageModel,
   isVisionModel
 } from '@renderer/config/models'
 import { CacheService } from '@renderer/services/CacheService'
@@ -520,7 +521,7 @@ export class GeminiAPIClient extends BaseApiClient<
           topP: this.getTopP(assistant, model),
           maxOutputTokens: maxTokens,
           tools: tools,
-          ...(enableGenerateImage ? this.getGenerateImageParameter() : {}),
+          ...(enableGenerateImage && isGenerateImageModel(model) ? this.getGenerateImageParameter() : {}),
           ...this.getBudgetToken(assistant, model),
           ...this.getCustomParameters(assistant)
         }
