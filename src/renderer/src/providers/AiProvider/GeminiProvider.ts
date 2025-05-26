@@ -339,18 +339,13 @@ export default class GeminiProvider extends BaseProvider {
   }: CompletionsParams): Promise<void> {
     const defaultModel = getDefaultModel()
     const model = assistant.model || defaultModel
-    let canGenerateImage = false
     if (isGenerateImageModel(model)) {
-      if (model.id === 'gemini-2.0-flash-exp') {
-        canGenerateImage = assistant.enableGenerateImage!
-      } else {
-        canGenerateImage = true
+      if (assistant.enableGenerateImage) {
+        await this.generateImageByChat({ messages, assistant, onChunk })
+        return
       }
     }
-    if (canGenerateImage) {
-      await this.generateImageByChat({ messages, assistant, onChunk })
-      return
-    }
+
     const { contextCount, maxTokens, streamOutput } = getAssistantSettings(assistant)
 
     const userMessages = filterUserRoleStartMessages(
