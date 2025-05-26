@@ -1,4 +1,5 @@
 import {
+  isGenerateImageModel,
   isOpenAIModel,
   isOpenAIReasoningModel,
   isOpenAIWebSearch,
@@ -310,12 +311,14 @@ export abstract class BaseOpenAIProvider extends BaseProvider {
    * @returns The completions
    */
   async completions({ messages, assistant, mcpTools, onChunk, onFilterMessages }: CompletionsParams): Promise<void> {
-    if (assistant.enableGenerateImage) {
-      await this.generateImageByChat({ messages, assistant, onChunk } as CompletionsParams)
-      return
-    }
     const defaultModel = getDefaultModel()
     const model = assistant.model || defaultModel
+    if (isGenerateImageModel(model)) {
+      if (assistant.enableGenerateImage) {
+        await this.generateImageByChat({ messages, assistant, onChunk } as CompletionsParams)
+        return
+      }
+    }
 
     const { contextCount, maxTokens, streamOutput } = getAssistantSettings(assistant)
     const isEnabledBuiltinWebSearch = assistant.enableWebSearch && isWebSearchModel(model)
