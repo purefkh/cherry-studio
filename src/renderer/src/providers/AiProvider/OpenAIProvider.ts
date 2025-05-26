@@ -3,6 +3,7 @@ import {
   findTokenLimit,
   getOpenAIWebSearchParams,
   isClaudeReasoningModel,
+  isGenerateImageModel,
   isHunyuanSearchModel,
   isOpenAIReasoningModel,
   isReasoningModel,
@@ -364,12 +365,14 @@ export default class OpenAIProvider extends BaseOpenAIProvider {
    * @returns The completions
    */
   async completions({ messages, assistant, mcpTools, onChunk, onFilterMessages }: CompletionsParams): Promise<void> {
-    if (assistant.enableGenerateImage) {
-      await this.generateImageByChat({ messages, assistant, onChunk } as CompletionsParams)
-      return
-    }
     const defaultModel = getDefaultModel()
     const model = assistant.model || defaultModel
+    if (isGenerateImageModel(model)) {
+      if (assistant.enableGenerateImage) {
+        await this.generateImageByChat({ messages, assistant, onChunk } as CompletionsParams)
+        return
+      }
+    }
 
     const { contextCount, maxTokens, streamOutput } = getAssistantSettings(assistant)
     const isEnabledBultinWebSearch = assistant.enableWebSearch && isWebSearchModel(model)
