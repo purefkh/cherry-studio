@@ -1,8 +1,7 @@
 import type { WebSearchResultBlock } from '@anthropic-ai/sdk/resources'
 import type { GroundingMetadata } from '@google/genai'
 import type OpenAI from 'openai'
-import React from 'react'
-import { BuiltinTheme } from 'shiki'
+import type { CSSProperties } from 'react'
 
 import type { Message } from './newMessage'
 
@@ -51,18 +50,17 @@ export const EFFORT_RATIO: EffortRatio = {
 
 export type AssistantSettings = {
   contextCount: number
-  enableMaxContexts: boolean
   temperature: number
   topP: number
   maxTokens: number | undefined
   enableMaxTokens: boolean
   streamOutput: boolean
-  enableToolUse: boolean
   hideMessages: boolean
   defaultModel?: Model
   customParameters?: AssistantSettingCustomParameters[]
   reasoning_effort?: ReasoningEffortOptions
   qwenThinkMode?: boolean
+  toolUseMode?: 'function' | 'prompt'
 }
 
 export type Agent = Omit<Assistant, 'model'> & {
@@ -187,6 +185,8 @@ export type PaintingParams = {
   files: FileType[]
 }
 
+export type PaintingProvider = 'aihubmix' | 'silicon' | 'dmxapi'
+
 export interface Painting extends PaintingParams {
   model?: string
   prompt?: string
@@ -208,6 +208,12 @@ export interface GeneratePainting extends PaintingParams {
   seed?: string
   negativePrompt?: string
   magicPromptOption?: boolean
+  renderingSpeed?: string
+  quality?: string
+  moderation?: string
+  n?: number
+  size?: string
+  background?: string
 }
 
 export interface EditPainting extends PaintingParams {
@@ -219,6 +225,7 @@ export interface EditPainting extends PaintingParams {
   styleType?: string
   seed?: string
   magicPromptOption?: boolean
+  renderingSpeed?: string
 }
 
 export interface RemixPainting extends PaintingParams {
@@ -232,6 +239,7 @@ export interface RemixPainting extends PaintingParams {
   seed?: string
   negativePrompt?: string
   magicPromptOption?: boolean
+  renderingSpeed?: string
 }
 
 export interface ScalePainting extends PaintingParams {
@@ -242,6 +250,17 @@ export interface ScalePainting extends PaintingParams {
   numImages?: number
   seed?: string
   magicPromptOption?: boolean
+  renderingSpeed?: string
+}
+
+export interface DmxapiPainting extends PaintingParams {
+  model?: string
+  prompt?: string
+  n?: number
+  aspect_ratio?: string
+  image_size?: string
+  seed?: string
+  style_type?: string
 }
 
 export type PaintingAction = Partial<GeneratePainting & RemixPainting & EditPainting & ScalePainting> & PaintingParams
@@ -252,6 +271,7 @@ export interface PaintingsState {
   remix: Partial<RemixPainting> & PaintingParams[]
   edit: Partial<EditPainting> & PaintingParams[]
   upscale: Partial<ScalePainting> & PaintingParams[]
+  DMXAPIPaintings: DmxapiPainting[]
 }
 
 export type MinAppType = {
@@ -261,7 +281,7 @@ export type MinAppType = {
   url: string
   bodered?: boolean
   background?: string
-  style?: React.CSSProperties
+  style?: CSSProperties
   addTime?: string
   type?: 'Custom' | 'Default' // Added the 'type' property
 }
@@ -307,7 +327,7 @@ export type TranslateLanguageVarious =
   | 'portuguese'
   | 'russian'
 
-export type CodeStyleVarious = BuiltinTheme | 'auto'
+export type CodeStyleVarious = 'auto' | string
 
 export type WebDavConfig = {
   webdavHost: string
@@ -315,6 +335,7 @@ export type WebDavConfig = {
   webdavPass: string
   webdavPath: string
   fileName?: string
+  skipBackupFile?: boolean
 }
 
 export type AppInfo = {
@@ -373,13 +394,13 @@ export interface KnowledgeBase {
   chunkOverlap?: number
   threshold?: number
   rerankModel?: Model
-  topN?: number
+  // topN?: number
 }
 
 export type KnowledgeBaseParams = {
   id: string
   model: string
-  dimensions: number
+  dimensions?: number
   apiKey: string
   apiVersion?: string
   baseURL: string
@@ -389,7 +410,7 @@ export type KnowledgeBaseParams = {
   rerankBaseURL?: string
   rerankModel?: string
   rerankModelProvider?: string
-  topN?: number
+  documentCount?: number
 }
 
 export type GenerateImageParams = {
@@ -470,7 +491,8 @@ export enum WebSearchSource {
   PERPLEXITY = 'perplexity',
   QWEN = 'qwen',
   HUNYUAN = 'hunyuan',
-  ZHIPU = 'zhipu'
+  ZHIPU = 'zhipu',
+  GROK = 'grok'
 }
 
 export type WebSearchResponse = {
@@ -654,3 +676,6 @@ export interface StoreSyncAction {
     source?: string
   }
 }
+
+export type OpenAISummaryText = 'auto' | 'concise' | 'detailed' | 'off'
+export type OpenAIServiceTier = 'auto' | 'default' | 'flex'
