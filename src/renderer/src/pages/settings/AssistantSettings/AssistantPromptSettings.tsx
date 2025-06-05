@@ -90,7 +90,6 @@ const AssistantPromptSettings: React.FC<Props> = ({ assistant, updateAssistant }
           placeholder={t('common.assistant') + t('common.name')}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onBlur={onUpdate}
           style={{ flex: 1 }}
         />
       </HStack>
@@ -113,9 +112,6 @@ const AssistantPromptSettings: React.FC<Props> = ({ assistant, updateAssistant }
             placeholder={t('common.assistant') + t('common.prompt')}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            onBlur={() => {
-              onUpdate()
-            }}
             autoFocus={true}
             spellCheck={false}
             style={{ minHeight: 'calc(80vh - 200px)', maxHeight: 'calc(80vh - 200px)', paddingBottom: '30px' }}
@@ -130,7 +126,12 @@ const AssistantPromptSettings: React.FC<Props> = ({ assistant, updateAssistant }
             {t('common.edit')}
           </Button>
         ) : (
-          <Button type="primary" onClick={() => setShowMarkdown(true)}>
+          <Button
+            type="primary"
+            onClick={() => {
+              onUpdate()
+              setShowMarkdown(true)
+            }}>
             {t('common.save')}
           </Button>
         )}
