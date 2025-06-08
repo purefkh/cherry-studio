@@ -69,11 +69,10 @@ const parseKeyValueString = (str: string): Record<string, string> => {
 
 const McpSettings: React.FC = () => {
   const { t } = useTranslation()
-  const {
-    server: { id: serverId }
-  } = useLocation().state as { server: MCPServer }
-  const server = useMCPServer(serverId).server as MCPServer
-  const { deleteMCPServer, updateMCPServer } = useMCPServers()
+  const { server: initialServer, isNew } = useLocation().state as { server: MCPServer; isNew?: boolean }
+  const serverId = initialServer.id
+  const server = useMCPServer(serverId).server || initialServer
+  const { addMCPServer, deleteMCPServer, updateMCPServer } = useMCPServers()
   const [serverType, setServerType] = useState<MCPServer['type']>('stdio')
   const [form] = Form.useForm<MCPFormValues>()
   const [loading, setLoading] = useState(false)
@@ -93,26 +92,29 @@ const McpSettings: React.FC = () => {
 
   const navigate = useNavigate()
 
-  // Initialize form values whenever the server changes
+  // Initialize form values whenever the server changes or it's a new server
   useEffect(() => {
-    const serverType: MCPServer['type'] = server.type || (server.baseUrl ? 'sse' : 'stdio')
+    const currentServer = isNew ? initialServer : server
+    if (!currentServer) return
+
+    const serverType: MCPServer['type'] = currentServer.type || (currentServer.baseUrl ? 'sse' : 'stdio')
     setServerType(serverType)
 
     // Set registry UI state based on command and registryUrl
-    if (server.command) {
-      handleCommandChange(server.command)
+    if (currentServer.command) {
+      handleCommandChange(currentServer.command)
 
       // If there's a registryUrl, ensure registry UI is shown
-      if (server.registryUrl) {
+      if (currentServer.registryUrl) {
         setIsShowRegistry(true)
 
         // Determine registry type based on command
-        if (server.command.includes('uv') || server.command.includes('uvx')) {
+        if (currentServer.command.includes('uv') || currentServer.command.includes('uvx')) {
           setRegistry(PipRegistry)
         } else if (
-          server.command.includes('npx') ||
-          server.command.includes('bun') ||
-          server.command.includes('bunx')
+          currentServer.command.includes('npx') ||
+          currentServer.command.includes('bun') ||
+          currentServer.command.includes('bunx')
         ) {
           setRegistry(NpmRegistry)
         }
@@ -121,22 +123,22 @@ const McpSettings: React.FC = () => {
 
     // Initialize basic fields
     form.setFieldsValue({
-      name: server.name,
-      description: server.description,
+      name: currentServer.name,
+      description: currentServer.description,
       serverType: serverType,
-      baseUrl: server.baseUrl || '',
-      command: server.command || '',
-      registryUrl: server.registryUrl || '',
-      isActive: server.isActive,
-      timeout: server.timeout,
-      args: server.args ? server.args.join('\n') : '',
-      env: server.env
-        ? Object.entries(server.env)
+      baseUrl: currentServer.baseUrl || '',
+      command: currentServer.command || '',
+      registryUrl: currentServer.registryUrl || '',
+      isActive: currentServer.isActive,
+      timeout: currentServer.timeout,
+      args: currentServer.args ? currentServer.args.join('\n') : '',
+      env: currentServer.env
+        ? Object.entries(currentServer.env)
             .map(([key, value]) => `${key}=${value}`)
             .join('\n')
         : '',
-      headers: server.headers
-        ? Object.entries(server.headers)
+      headers: currentServer.headers
+        ? Object.entries(currentServer.headers)
             .map(([key, value]) => `${key}=${value}`)
             .join('\n')
         : ''
@@ -145,12 +147,17 @@ const McpSettings: React.FC = () => {
     // Initialize advanced fields separately to ensure they're captured
     // even if the Collapse panel is closed
     form.setFieldsValue({
-      provider: server.provider || '',
-      providerUrl: server.providerUrl || '',
-      logoUrl: server.logoUrl || '',
-      tags: server.tags || []
+      provider: currentServer.provider || '',
+      providerUrl: currentServer.providerUrl || '',
+      logoUrl: currentServer.logoUrl || '',
+      tags: currentServer.tags || []
     })
-  }, [server, form])
+
+    // If it's a new server, mark form as changed initially
+    if (isNew) {
+      setIsFormChanged(true)
+    }
+  }, [server, initialServer, isNew, form])
 
   // Watch for serverType changes
   useEffect(() => {
@@ -224,19 +231,19 @@ const McpSettings: React.FC = () => {
 
       // set basic fields
       const mcpServer: MCPServer = {
-        id: server.id,
+        id: initialServer.id,
         name: values.name,
-        type: values.serverType || server.type,
+        type: values.serverType || initialServer.type,
         description: values.description,
         isActive: values.isActive,
         registryUrl: values.registryUrl,
-        searchKey: server.searchKey,
-        timeout: values.timeout || server.timeout,
+        searchKey: initialServer.searchKey,
+        timeout: values.timeout || initialServer.timeout,
         // Preserve existing advanced properties if not set in the form
-        provider: values.provider || server.provider,
-        providerUrl: values.providerUrl || server.providerUrl,
-        logoUrl: values.logoUrl || server.logoUrl,
-        tags: values.tags || server.tags
+        provider: values.provider || initialServer.provider,
+        providerUrl: values.providerUrl || initialServer.providerUrl,
+        logoUrl: values.logoUrl || initialServer.logoUrl,
+        tags: values.tags || initialServer.tags
       }
 
       // set stdio or sse server
@@ -257,15 +264,23 @@ const McpSettings: React.FC = () => {
       }
 
       try {
-        await window.api.mcp.restartServer(mcpServer)
-        updateMCPServer({ ...mcpServer, isActive: true })
-        window.message.success({ content: t('settings.mcp.updateSuccess'), key: 'mcp-update-success' })
+        if (isNew) {
+          addMCPServer(mcpServer)
+          window.message.success({ content: t('settings.mcp.addSuccess'), key: 'mcp-add-success' })
+          navigate(`/settings/mcp/settings`, { state: { server: mcpServer, isNew: false } })
+        } else {
+          await window.api.mcp.restartServer(mcpServer)
+          updateMCPServer({ ...mcpServer, isActive: true })
+          window.message.success({ content: t('settings.mcp.updateSuccess'), key: 'mcp-update-success' })
+        }
         setLoading(false)
         setIsFormChanged(false)
       } catch (error: any) {
-        updateMCPServer({ ...mcpServer, isActive: false })
+        if (!isNew) {
+          updateMCPServer({ ...mcpServer, isActive: false })
+        }
         window.modal.error({
-          title: t('settings.mcp.updateError'),
+          title: isNew ? t('settings.mcp.addError') : t('settings.mcp.updateError'),
           content: error.message,
           centered: true
         })
@@ -341,7 +356,6 @@ const McpSettings: React.FC = () => {
 
     await form.validateFields()
     setLoadingServer(server.id)
-    const oldActiveState = server.isActive
 
     try {
       if (active) {
@@ -363,7 +377,7 @@ const McpSettings: React.FC = () => {
         content: formatMcpError(error),
         centered: true
       })
-      updateMCPServer({ ...server, isActive: oldActiveState })
+      updateMCPServer({ ...server, isActive: false })
     } finally {
       setLoadingServer(null)
     }
@@ -613,7 +627,9 @@ const McpSettings: React.FC = () => {
         <SettingTitle>
           <Flex justify="space-between" align="center" gap={5} style={{ marginRight: 10 }}>
             <ServerName className="text-nowrap">{server?.name}</ServerName>
-            <Button danger icon={<DeleteOutlined />} type="text" onClick={() => onDeleteMcpServer(server)} />
+            {!isNew && ( // 只有当不是新创建的服务器时才显示删除按钮
+              <Button danger icon={<DeleteOutlined />} type="text" onClick={() => onDeleteMcpServer(server)} />
+            )}
           </Flex>
           <Flex align="center" gap={16}>
             <Switch

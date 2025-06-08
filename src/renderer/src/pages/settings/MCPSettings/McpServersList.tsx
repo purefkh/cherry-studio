@@ -35,10 +35,8 @@ const McpServersList: FC = () => {
       env: {},
       isActive: false
     }
-    addMCPServer(newServer)
-    navigate(`/settings/mcp/settings`, { state: { server: newServer } })
-    window.message.success({ content: t('settings.mcp.addSuccess'), key: 'mcp-list' })
-  }, [addMCPServer, navigate, t])
+    navigate(`/settings/mcp/settings`, { state: { server: newServer, isNew: true } })
+  }, [navigate, t])
 
   const onSyncServers = useCallback(() => {
     SyncServersPopup.show(mcpServers)
