@@ -1,6 +1,5 @@
 import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd'
 import { QuickPanelListItem } from '@renderer/components/QuickPanel'
-import { isGenerateImageModel } from '@renderer/config/models'
 import { useAppDispatch, useAppSelector } from '@renderer/store'
 import { setIsCollapsed, setToolOrder } from '@renderer/store/inputTools'
 import { Assistant, FileType, KnowledgeBase, Model } from '@renderer/types'
@@ -58,6 +57,7 @@ export interface InputbarToolsProps {
   setFiles: (files: FileType[]) => void
   extensions: string[]
   showThinkingButton: boolean
+  showGenerateImageButton: boolean
   showKnowledgeIcon: boolean
   selectedKnowledgeBases: KnowledgeBase[]
   handleKnowledgeBaseSelect: (bases?: KnowledgeBase[]) => void
@@ -99,6 +99,7 @@ const InputbarTools = ({
   files,
   setFiles,
   showThinkingButton,
+  showGenerateImageButton,
   showKnowledgeIcon,
   selectedKnowledgeBases,
   handleKnowledgeBaseSelect,
@@ -357,12 +358,13 @@ const InputbarTools = ({
         component: (
           <GenerateImageButton
             model={model}
+            mentionModels={mentionModels}
             assistant={assistant}
             onEnableGenerateImage={onEnableGenerateImage}
             ToolbarButton={ToolbarButton}
           />
         ),
-        condition: isGenerateImageModel(model)
+        condition: showGenerateImageButton
       },
       {
         key: 'mention_models',
@@ -443,6 +445,7 @@ const InputbarTools = ({
     setText,
     showKnowledgeIcon,
     showThinkingButton,
+    showGenerateImageButton,
     t
   ])
 
