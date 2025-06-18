@@ -18,6 +18,7 @@ import {
   findTokenLimit,
   GEMINI_FLASH_MODEL_REGEX,
   isGemmaModel,
+  isGenerateImageModel,
   isSupportedThinkingTokenGeminiModel,
   isVisionModel
 } from '@renderer/config/models'
@@ -567,7 +568,7 @@ export class GeminiAPIClient extends BaseApiClient<
           topP: this.getTopP(assistant, model),
           maxOutputTokens: maxTokens,
           tools: tools,
-          ...(enableGenerateImage ? this.getGenerateImageParameter() : {}),
+          ...(enableGenerateImage && isGenerateImageModel(model) ? this.getGenerateImageParameter() : {}),
           ...this.getBudgetToken(assistant, model),
           // 只在对话场景下应用自定义参数，避免影响翻译、总结等其他业务逻辑
           // 注意：用户自定义参数总是应该覆盖其他参数

@@ -446,16 +446,18 @@ const InputbarInner: FC<InputbarInnerProps> = ({ assistant: initialAssistant, se
     ) {
       updateAssistant({ ...assistant, webSearchProviderId: undefined })
     }
-
     // Auto-enable/disable image generation based on model capabilities
-    if (isGenerateImageModel(model)) {
-      if (isAutoEnableImageGenerationModel(model) && !assistant.enableGenerateImage) {
+    const supportGenerateImage = isGenerateImageModel(model) || mentionedModels.some(isGenerateImageModel)
+    const autoEnableImageGeneration =
+      isAutoEnableImageGenerationModel(model) || mentionedModels.some(isAutoEnableImageGenerationModel)
+    if (supportGenerateImage) {
+      if (autoEnableImageGeneration && !assistant.enableGenerateImage) {
         updateAssistant({ ...assistant, enableGenerateImage: true })
       }
     } else if (assistant.enableGenerateImage) {
       updateAssistant({ ...assistant, enableGenerateImage: false })
     }
-  }, [assistant, model, updateAssistant])
+  }, [assistant, model, mentionedModels, updateAssistant])
 
   if (isMultiSelectMode) {
     return null

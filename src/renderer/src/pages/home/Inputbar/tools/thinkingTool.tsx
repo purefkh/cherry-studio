@@ -6,7 +6,9 @@ const thinkingTool = defineTool({
   key: 'thinking',
   label: (t) => t('chat.input.thinking.label'),
   visibleInScopes: [TopicType.Chat],
-  condition: ({ model }) => isReasoningModel(model),
+  condition: ({ model, mentionedModels = [] }) => {
+    return isReasoningModel(model) || mentionedModels.some((m) => isReasoningModel(m))
+  },
   render: ({ assistant, model, quickPanel }) => (
     <ThinkingButton quickPanel={quickPanel} model={model} assistantId={assistant.id} />
   )

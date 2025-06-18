@@ -84,10 +84,13 @@ const InputbarTools = ({ scope, assistantId, session }: InputbarToolsNewProps) =
   const isCollapse = useAppSelector((state) => state.inputTools.isCollapsed)
   const [targetTool, setTargetTool] = useState<ToolConfig | null>(null)
 
+  // Get mentioned models from tools context
+  const mentionedModels = useMemo(() => toolsContext.mentionedModels || [], [toolsContext.mentionedModels])
+
   // Get tools for current scope
   const availableTools = useMemo(() => {
-    return getToolsForScope(scope, { assistant, model, session })
-  }, [scope, assistant, model, session])
+    return getToolsForScope(scope, { assistant, model, mentionedModels, session })
+  }, [scope, assistant, model, mentionedModels, session])
 
   // Get tool order for current scope
   const toolOrder = useMemo(() => {
