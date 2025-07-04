@@ -111,7 +111,7 @@ export default class MineruPreprocessProvider extends BasePreprocessProvider {
   }
 
   private async validateFile(filePath: string): Promise<void> {
-    const quota = await this.checkQuota()
+    // const quota = await this.checkQuota()
     const pdfBuffer = await fs.promises.readFile(filePath)
 
     const doc = await this.readPdf(new Uint8Array(pdfBuffer))
@@ -126,9 +126,9 @@ export default class MineruPreprocessProvider extends BasePreprocessProvider {
       throw new Error(`PDF file size (${fileSizeMB}MB) exceeds the limit of 200MB`)
     }
     // 检查配额
-    if (quota <= 0 || quota - doc.numPages <= 0) {
-      throw new Error('MinerU解析配额不足，请申请企业账户或自行部署，剩余额度：' + quota)
-    }
+    // if (quota <= 0 || quota - doc.numPages <= 0) {
+    //   throw new Error('MinerU解析配额不足，请申请企业账户或自行部署，剩余额度：' + quota)
+    // }
   }
 
   private createProcessedFileInfo(file: FileMetadata, outputPath: string): FileMetadata {
