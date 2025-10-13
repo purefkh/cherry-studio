@@ -78,7 +78,7 @@ win:
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
   target:
     - target: nsis
-    - target: portable
+    # - target: portable
   signtoolOptions:
     sign: scripts/win-sign.js
   verifyUpdateCodeSignature: false

@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 17 * * *" # 1:00 BJ Time
+  push:
+    branches: [dev]
 
 permissions:
   contents: write
@@ -93,7 +95,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get install -y rpm
-          pnpm build:linux
+          pnpm build:linux:x64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: --max-old-space-size=8192
@@ -105,7 +107,7 @@ jobs:
       - name: Build Mac
         if: matrix.os == 'macos-latest'
         run: |
-          pnpm build:mac
+          pnpm build:mac:arm64
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
@@ -122,7 +124,7 @@ jobs:
       - name: Build Windows
         if: matrix.os == 'windows-latest'
         run: |
-          pnpm build:win
+          pnpm build:win:x64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: --max-old-space-size=8192
