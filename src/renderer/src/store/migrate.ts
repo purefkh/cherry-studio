@@ -119,6 +119,12 @@ function addProvider(state: RootState, id: string) {
   }
 }
 
+// remove provider from state
+// @ts-ignore
+function removeProvider(state: RootState, id: string) {
+  state.llm.providers = state.llm.providers.filter((p) => p.id !== id)
+}
+
 // Fix missing provider
 function fixMissingProvider(state: RootState) {
   SYSTEM_PROVIDERS.forEach((p) => {
